@@ -53,6 +53,7 @@ The four fundamental optical parameters in the code are:
 Absorption describes the loss of light energy as it travels through a material.
 
 For a homogeneous absorbing medium without scattering, the Beer–Lambert law is:
+
 $$
 I(L)=I_0 e^{-\mu_a L}
 $$
@@ -60,6 +61,7 @@ $$
 where $L$ is the traveled distance, and $I_0$ is the initial intensity.
 
 For example, for $\mu_a=0.45\text{ mm}^{-1}$ and $L=2\text{ mm}$:
+
 $$
 \frac{I}{I_0}=e^{-0.45\cdot2}\approx0.407
 $$
@@ -71,6 +73,7 @@ In our simulation, blood is modeled as substantially more absorbing than the sur
 Scattering describes how frequently a photon changes its propagation direction.
 
 A simplified random-flight model samples the distance to the next scattering interaction from an exponential distribution:
+
 $$
 \ell=-\frac{\ln U}{\mu_s}
 $$
@@ -78,6 +81,7 @@ $$
 where $U$ is uniformly distributed between 0 and 1.
 
 The mean distance between scattering events is:
+
 $$
 \mathbb E[\ell]=\frac{1}{\mu_s}
 $$
@@ -91,6 +95,7 @@ Not every scattering event sends the photon in a completely random direction.
 Biological tissue tends to scatter light forward.
 
 The anisotropy parameter is:
+
 $$
 g=\mathbb E[\cos\theta]
 $$
@@ -100,11 +105,13 @@ where $\theta$ is the scattering angle.
 - $g\approx1$: Strong forward scattering.
 - $g\approx-1$: Strong backward scattering.
 A useful quantity is the reduced scattering coefficient:
+
 $$
 \boxed{\mu_s'=\mu_s(1-g)}
 $$
 
 At 850 nm, our dermis parameters are:
+
 $$
 \mu_s'=12(1-0.85)=1.8\text{ mm}^{-1}
 $$
@@ -143,6 +150,7 @@ The code defines:
 
 
 Therefore, the physical tissue volume is:
+
 $$
 L_x=80(0.25)=20\text{ mm}
 $$
@@ -169,6 +177,7 @@ v = np.ones((nx, ny, nz), dtype=np.uint8)v[:, :, cfg['subcut_start_vox']:] = 2
 Initially, every voxel is labeled 1 (dermis). Starting at voxel 6 in the Z direction, the material changes to 2 (subcutaneous fat).
 
 The boundary is therefore at:
+
 $$
 z=6\times0.25=1.5\text{ mm}
 $$
@@ -177,6 +186,7 @@ $$
 The vein is a cylinder running along the Y axis.
 
 The equation of its cross-section is:
+
 $$
 \boxed{(x-x_v)^2+(z-z_v)^2\le R^2}
 $$
@@ -192,6 +202,7 @@ mask = (
 
 
 We specify:
+
 $$
 x_v=11.5\text{ mm},\qquad
 z_v=3.0\text{ mm},\qquad R=1.0\text{ mm}
@@ -208,6 +219,7 @@ In principle, light propagation in tissue can be described by the radiative tran
 
 A simplified steady-state form is:
 <!-- cspell:ignore mathbf -->
+
 $$
 \hat{\mathbf s}\cdot\nabla L(\mathbf r,\hat{\mathbf s})
 +(\mu_a+\mu_s)L(\mathbf r,\hat{\mathbf s})
@@ -279,6 +291,7 @@ A photon emitted by the source can travel in many directions, but we only care a
 The probability that a photon reaches a point $\mathbf r$ from the source decreases with distance. The probability that it subsequently reaches the detector also decreases with distance.
 
 In the diffusion approximation, the source–detector absorption sensitivity can be written schematically as:
+
 $$
 \boxed{
 J(\mathbf r)\propto
@@ -334,11 +347,13 @@ This is where the code connects Monte Carlo trajectories to the absorption contr
 Suppose one detected photon traveled through three tissue regions.
 
 The partial path lengths are:
+
 $$
 L_{p,1},\quad L_{p,2},\quad L_{p,3}
 $$
 
 Its final weight, under the absorption model, is:
+
 $$
 \boxed{
 w_p=\exp\left(
@@ -354,6 +369,7 @@ For example, suppose a photon travels:
 - 4 mm through fat;
 - 1 mm through the vein.
 At 850 nm, using the configured absorption coefficients:
+
 $$
 w_p=e^{-(0.03\cdot2+0.015\cdot4+0.45\cdot1)}
 $$
@@ -365,6 +381,7 @@ $$
 The packet retains about 56.5% of its initial weight after the modeled absorption.
 #### 6.2 Calculating detector intensity
 The detector accumulates the weights of all detected photon packets:
+
 $$
 \boxed{
 I_d=\sum_{p\in\mathcal D_d}w_p
@@ -393,6 +410,7 @@ ppath_mm @ baseline_mua
 
 
 calculates:
+
 $$
 \sum_m L_{p,m}\mu_{a,m}
 $$
@@ -419,6 +437,7 @@ It is particularly useful because rerunning two entirely independent Monte Carlo
 However, this path reweighting is valid here because the two models have identical scattering and refractive properties. Only absorption changes.
 #### 6.4 The actual measured signal
 We don't reconstruct from the absolute intensity. Instead, we use the logarithmic intensity ratio:
+
 $$
 \boxed{
 y_d=\ln\left(\frac{I_{0,d}}{I_{1,d}}\right)
@@ -436,11 +455,13 @@ This is a form of differential optical density.
 It is useful because multiplicative attenuation becomes additive after taking the logarithm.
 
 For example:
+
 $$
 I_0=1000,\qquad I_1=800
 $$
 
 Then:
+
 $$
 y=\ln(1000/800)\approx0.223
 $$
@@ -465,6 +486,7 @@ The Jacobian answers exactly that question.
 Let the absorption coefficient at voxel $j$ be $\mu_{a,j}$, and the intensity at detector $d$ be $I_d$.
 
 We define positive log-absorption sensitivity as:
+
 $$
 \boxed{
 S_{dj}=-\frac{\partial\ln I_d}{\partial\mu_{a,j}}
@@ -476,22 +498,26 @@ The minus sign makes the sensitivity positive: increasing absorption generally d
 Each element $S_{dj}$ represents how strongly voxel $j$ influences detector $d$.
 #### 7.2 Deriving the Jacobian from photon paths
 Recall that the detected intensity is:
+
 $$
 I_d=\sum_{p\in\mathcal D_d}w_p
 $$
 
 and each photon has weight:
+
 $$
 w_p=e^{-\sum_j\mu_{a,j}L_{pj}}
 $$
 
 Differentiating with respect to absorption at voxel $j$:
+
 $$
 \frac{\partial I_d}{\partial\mu_{a,j}}
 =-\sum_{p\in\mathcal D_d}w_pL_{pj}
 $$
 
 Therefore:
+
 $$
 \boxed{
 S_{dj}=
@@ -550,6 +576,7 @@ Why?
 Because we assumed that the vein extends uniformly along Y.
 
 The sensitivity for the entire vertical column at $(x,z)$ is therefore:
+
 $$
 S_d(x,z)=\sum_y S_d(x,y,z)
 $$
@@ -569,11 +596,13 @@ j_row = (j_xz * delta_mua).reshape(-1)
 
 
 Here:
+
 $$
 \Delta\mu_a=\mu_{a,\mathrm{blood}}-\mu_{a,\mathrm{fat}}
 $$
 
 At 850 nm:
+
 $$
 \Delta\mu_a=0.45-0.015=0.435\text{ mm}^{-1}
 $$
@@ -587,6 +616,7 @@ We now have two things:
 We want to reconstruct the unknown distribution $f$.
 
 For a sufficiently small absorption perturbation, the first-order approximation is:
+
 $$
 \boxed{\mathbf y\approx\mathbf J\mathbf f}
 $$
@@ -594,6 +624,7 @@ $$
 This is the basic inverse problem.
 8.1 Understanding the matrix dimensions
 Our reconstruction grid is:
+
 $$
 80\times40=3200\text{ pixels}
 $$
@@ -603,6 +634,7 @@ Every pixel is a possible location of increased absorption.
 Suppose we have $M$ valid source–detector pairs.
 
 Then:
+
 $$
 \underbrace{\mathbf{y}}_{M\times1}=\underbrace{\mathbf{J}\mathbf{f}}_{M\times3200}\underbrace{\mathbf{f}}_{3200\times1}
 $$
@@ -618,6 +650,7 @@ Each column describes how one pixel affects the different measurements.
 Before dealing with 3,200 unknowns, imagine there are only two possible absorbing pixels.
 
 The Jacobian is:
+
 $$
 J=
 \begin{bmatrix}
@@ -627,6 +660,7 @@ J=
 $$
 
 Suppose the true vein occupies the first pixel:
+
 $$
 f=
 \begin{bmatrix}
@@ -635,6 +669,7 @@ f=
 $$
 
 Our detector measurements become:
+
 $$
 y=Jf=
 \begin{bmatrix}
@@ -671,6 +706,7 @@ def solve_inverse(J, y, cfg, max_iter=None):
 We want to find a reconstruction that both matches the measurements and has physically reasonable properties.
 #### 9.1 Ordinary least squares
 The simplest objective would be:
+
 $$
 \min_f\frac12\|Jf-y\|_2^2
 $$
@@ -682,6 +718,7 @@ But because the system is ill-conditioned, minimizing this term alone may yield 
 Our code includes three regularization terms.
 
 The first is ridge regularization:
+
 $$
 R_{\mathrm{ridge}}(u)=\frac{\lambda_r}{2}\|u\|_2^2
 $$
@@ -689,6 +726,7 @@ $$
 This penalizes large reconstruction values and helps stabilize the inverse solution.
 
 The second is spatial smoothness:
+
 $$
 R_{\mathrm{smooth}}(u)=\frac{\lambda_s}{2}\|\nabla u\|_2^2
 $$
@@ -696,6 +734,7 @@ $$
 This penalizes abrupt changes between adjacent pixels. It's useful because neighboring pixels within a vein should generally have related absorption values.
 
 The third is sparsity:
+
 $$
 R_{\mathrm{sparse}}(u)=\lambda_1\|u\|_1
 $$
@@ -703,6 +742,7 @@ $$
 This encourages many pixels to remain zero, favoring a localized absorbing structure rather than absorption distributed everywhere.
 
 In the implementation, $f=Cu$, where $C$ is a diagonal, sensitivity-based compensation matrix. With $A=JC/s$ and $b=y/s$ for a numerical scale factor $s$, the optimization problem becomes:
+
 $$
 \boxed{
 \begin{aligned}
@@ -745,6 +785,7 @@ sens = np.sqrt(np.sum(J**2, axis=0))
 
 
 Mathematically:
+
 $$
 s_j=\sqrt{\sum_dJ_{dj}^2}
 $$
@@ -773,6 +814,7 @@ grad = (
 
 
 The corresponding mathematical expression is:
+
 $$
 \nabla F(u)=
 A^T(Au-b)+\lambda_r u+\lambda_sD^TDu
@@ -826,6 +868,7 @@ Tissue and blood absorption differ with wavelength, and scattering also varies w
 This changes both the measured vein contrast and the sensitivity kernels.
 
 For each wavelength $\lambda$, we calculate:
+
 $$
 y_\lambda\approx J_\lambda f
 $$
@@ -849,6 +892,7 @@ fused = solve_inverse(J, y, cfg)
 
 
 Mathematically, stacking the measurements gives:
+
 $$
 \begin{bmatrix}
 y_{730}\\
