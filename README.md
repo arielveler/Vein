@@ -7,7 +7,7 @@ The notebook combines three areas:
 3. Inverse problems and optimization — how we use those measurements to estimate where the vein is located.
 I'll explain the mathematical principles, their physical meaning, and their implementation in the Python code.
 
-You can follow along in your ![Jupyter Notebook](/nfs/dev/aveler/py/monte-carlo.ipynb).
+You can follow along in your ![Jupyter Notebook](monte-carlo.ipynb).
 
 ## 1. The big picture
 Imagine placing an NIR LED and several photodiodes on the surface of a person's skin.
